@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+<title>StyleMate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Fraunces:ital,opsz,wght@1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f2f4f7; --surface:#fff; --border:#e0e4ea;
+  --text:#1a1d23; --muted:#8a90a0;
+  --accent:#5b7ff1; --success:#3dba7e; --danger:#e05c5c;
+  --modal-r:22px;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-logo:'Fraunces',Georgia,serif;
+  --safe-top:env(safe-area-inset-top,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font-body);background:var(--bg);color:var(--text);
+  min-height:100dvh;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;
+  padding-top:var(--safe-top);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding-left:24px;padding-right:24px;padding-bottom:32px;
+  background-image:radial-gradient(circle,rgba(91,127,241,.07) 1px,transparent 1px);
+  background-size:28px 28px;
+  animation:fadeIn .4s ease;
+}
+.auth-logo{
+  font-family:var(--font-logo);font-size:46px;font-weight:300;font-style:italic;
+  letter-spacing:.01em;color:var(--accent);margin-bottom:6px;
+}
+.auth-sub{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:48px;
+}
+.auth-card{
+  width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--modal-r);padding:32px 28px;display:flex;flex-direction:column;
+  gap:14px;box-shadow:0 4px 24px rgba(0,0,0,.07);
+}
+.input-field{
+  background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:var(--font-body);font-size:15px;
+  width:100%;outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.input-field::placeholder{color:var(--muted)}
+.input-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,127,241,.12)}
+.auth-btns{display:flex;gap:10px;margin-top:6px}
+.btn{
+  font-family:var(--font-body);font-size:14px;font-weight:500;letter-spacing:.06em;
+  border:none;border-radius:12px;cursor:pointer;padding:14px 20px;
+  transition:opacity .2s,transform .1s;-webkit-user-select:none;
+}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn-gold{background:var(--accent);color:#fff;flex:1}
+.btn-outline{
+  background:transparent;color:var(--text);border:1px solid var(--border);flex:1;
+  transition:background .25s,color .25s,border-color .25s;
+}
+.btn-back{
+  background:none;border:none;color:var(--muted);font-size:13px;
+  font-family:var(--font-body);cursor:pointer;padding:0;
+  text-align:left;transition:color .2s;align-self:flex-start;
+}
+.btn-back:active{color:var(--text)}
+.status-text{font-size:12px;color:var(--muted);text-align:center;min-height:16px}
+.error-inline{font-size:11px;color:var(--danger);display:none;padding-left:4px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="auth-logo">StyleMate</div>
+<div class="auth-sub">Tu armario inteligente</div>
+
+<div class="auth-card">
+  <input type="text"     id="auth-user"         class="input-field" placeholder="Usuario"              autocomplete="username"         oninput="checkCamposReg()">
+  <input type="password" id="auth-pass"         class="input-field" placeholder="Contraseña"           autocomplete="current-password" oninput="checkCamposReg()" onblur="validarCoincidencia()">
+  <input type="password" id="auth-pass-confirm" class="input-field" placeholder="Confirmar contraseña" autocomplete="new-password"     oninput="checkCamposReg()" onblur="validarCoincidencia()" style="display:none">
+  <span id="error-pass" class="error-inline">Las contraseñas no coinciden</span>
+  <button id="btn-back" class="btn btn-back" onclick="volverAlLogin()" style="display:none">← Volver</button>
+  <div class="auth-btns">
+    <button id="btn-login-ui" class="btn btn-gold"    onclick="gestionarAuth('login')">Entrar</button>
+    <button id="btn-reg-ui"   class="btn btn-outline" onclick="gestionarAuth('registro')">Registrarse</button>
+  </div>
+  <p id="auth-status" class="status-text"></p>
+</div>
+
+<script>
+const API_URL = "http://192.168.0.101:8000";
+
+// Si ya hay sesión guardada, ir directo a la app
+if (sessionStorage.getItem('sesion')) {
+  window.location.replace('stylemate.html');
+}
+
+function validarCoincidencia() {
+  const p=document.getElementById("auth-pass"), c=document.getElementById("auth-pass-confirm"), e=document.getElementById("error-pass");
+  if (c.style.display!=="none" && c.value!=="") {
+    const ok=p.value===c.value;
+    e.style.display=ok?"none":"block";
+    p.style.borderColor=c.style.borderColor=ok?"var(--success)":"var(--danger)";
+    return ok;
+  }
+  p.style.borderColor=c.style.borderColor=""; return true;
+}
+
+function checkCamposReg() {
+  const u=document.getElementById("auth-user").value.trim();
+  const p=document.getElementById("auth-pass").value;
+  const c=document.getElementById("auth-pass-confirm");
+  const b=document.getElementById("btn-reg-ui");
+  if (c.style.display==="none") return;
+  const ok=u&&p&&c.value;
+  b.classList.toggle("btn-gold",!!ok); b.classList.toggle("btn-outline",!ok);
+}
+
+function volverAlLogin() {
+  const c=document.getElementById("auth-pass-confirm"), p=document.getElementById("auth-pass");
+  c.style.display="none"; c.value=""; c.style.borderColor=p.style.borderColor="";
+  document.getElementById("error-pass").style.display="none";
+  document.getElementById("btn-back").style.display="none";
+  document.getElementById("auth-status").textContent="";
+  document.getElementById("btn-login-ui").style.display="block";
+  const b=document.getElementById("btn-reg-ui");
+  b.style.width=""; b.classList.remove("btn-gold"); b.classList.add("btn-outline");
+}
+
+async function gestionarAuth(tipo) {
+  const user=document.getElementById("auth-user").value.trim();
+  const pass=document.getElementById("auth-pass").value;
+  const confirm=document.getElementById("auth-pass-confirm");
+  const status=document.getElementById("auth-status");
+
+  if (tipo==="registro") {
+    if (confirm.style.display==="none") {
+      confirm.style.display="block";
+      document.getElementById("btn-login-ui").style.display="none";
+      document.getElementById("btn-reg-ui").style.width="100%";
+      document.getElementById("btn-back").style.display="block";
+      status.textContent="Confirma tu contraseña para crear la cuenta";
+      checkCamposReg(); return;
+    }
+    if (!validarCoincidencia()) { status.textContent="Las contraseñas no coinciden"; return; }
+  }
+
+  if (!user||!pass||(tipo==="registro"&&!confirm.value)) {
+    status.textContent="Rellena todos los campos"; return;
+  }
+
+  status.textContent="Conectando…";
+  const form=new FormData(); form.append("usuario",user); form.append("password",pass);
+
+  try {
+    const res=await fetch(`${API_URL}/${tipo}`,{method:"POST",body:form});
+    const data=await res.json();
+    if (res.ok) {
+      if (tipo==="login") {
+        sessionStorage.setItem('sesion', JSON.stringify({ id: data.id, nombre: data.nombre }));
+        window.location.replace('stylemate.html');
+      } else {
+        status.style.color="var(--success)";
+        status.textContent="¡Cuenta creada! Ya puedes entrar.";
+        setTimeout(()=>{ volverAlLogin(); status.textContent=""; }, 2500);
+      }
+    } else {
+      status.style.color="var(--danger)"; status.textContent=data.detail||"Error de acceso";
+    }
+  } catch {
+    status.style.color="var(--danger)"; status.textContent="No se pudo conectar al servidor";
+  }
+}
+</script>
+</body>
+</html>

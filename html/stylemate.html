@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+<title>StyleMate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Fraunces:ital,opsz,wght@1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f2f4f7; --surface:#fff; --border:#e0e4ea;
+  --text:#1a1d23; --muted:#8a90a0;
+  --accent:#5b7ff1; --success:#3dba7e; --danger:#e05c5c;
+  --radius:16px; --modal-r:22px; --nav-h:68px;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-logo:'Fraunces',Georgia,serif;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);
+  min-height:100dvh;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;
+  padding-top:var(--safe-top)}
+
+/* APP SHELL */
+#app{display:block;max-width:480px;margin:0 auto;
+  padding-bottom:calc(var(--nav-h) + var(--safe-bot) + 12px);animation:fadeIn .4s ease}
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 12px;position:sticky;top:0;background:var(--bg);z-index:100}
+.topbar-spacer{width:38px}
+.topbar-logo{font-family:var(--font-logo);font-size:30px;font-weight:300;font-style:italic;
+  color:var(--accent);letter-spacing:.01em;text-align:center;flex:1}
+.topbar-icon{width:38px;height:38px;background:var(--surface);border:1px solid var(--border);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 1px 6px rgba(0,0,0,.06);transition:transform .15s}
+.topbar-icon:active{transform:scale(.93)}
+.perfil-menu{
+  position:absolute;top:calc(100% + 8px);right:20px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:6px;min-width:160px;
+  box-shadow:0 8px 24px rgba(0,0,0,.1);
+  display:none;z-index:500;animation:fadeScale .2s ease;
+}
+.perfil-menu.visible{display:block}
+.perfil-nombre{
+  font-size:12px;color:var(--muted);padding:8px 12px 6px;
+  letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px;
+}
+.perfil-btn{
+  display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;
+  border:none;background:none;cursor:pointer;border-radius:10px;
+  font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--danger);
+  transition:background .15s;
+}
+.perfil-btn:hover{background:rgba(224,92,92,.07)}
+.perfil-btn svg{width:16px;height:16px;stroke:var(--danger)}
+.topbar-icon svg{width:18px;height:18px;stroke:var(--muted)}
+.page{display:none;padding:0 20px;animation:fadeIn .3s ease}
+.page.active{display:block}
+.section-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;margin-top:22px}
+
+/* CLIMA */
+.clima-wrap{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.clima-opciones{display:flex;gap:6px}
+.clima-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 4px 8px;border-radius:10px;border:none;background:none;
+  cursor:pointer;transition:color .2s,transform .1s;-webkit-user-select:none;
+  color:var(--muted)}
+.clima-btn:active{transform:scale(.9)}
+.clima-btn.activo{color:var(--accent)}
+.clima-btn.activo .clima-icon-wrap{background:rgba(91,127,241,.1);border-color:rgba(91,127,241,.25)}
+.clima-icon-wrap{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  transition:background .2s,border-color .2s;margin-bottom:2px}
+.clima-icon{font-size:20px;line-height:1}
+.clima-texto{font-size:9px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;
+  transition:color .2s}
+
+/* OUTFIT CARDS */
+.outfits-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.outfit-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);
+  animation:slideUp .35s ease both}
+.outfit-card:nth-child(2){animation-delay:.06s}
+.outfit-card:nth-child(3){animation-delay:.12s}
+.outfit-card:nth-child(4){animation-delay:.18s}
+.outfit-placeholder{background:var(--surface);border:1px dashed var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  aspect-ratio:3/4;gap:8px;color:var(--border);animation:slideUp .35s ease both}
+.outfit-placeholder svg{width:48px;height:48px;stroke:var(--border)}
+.outfit-placeholder span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--border)}
+.outfit-img{width:100%;aspect-ratio:3/4;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;background:var(--bg);padding:12px}
+.outfit-acciones{display:flex;border-top:1px solid var(--border)}
+.outfit-btn{flex:1;padding:13px 0;border:none;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .15s;-webkit-user-select:none}
+.outfit-btn:active{transform:scale(.84)}
+.outfit-btn.like{font-size:0;line-height:1}
+.outfit-btn.like svg{width:24px;height:24px;transition:fill .15s,stroke .15s}
+.outfit-btn.like svg path{fill:none;stroke:var(--muted);stroke-width:1.8}
+.outfit-btn.like.liked svg path{fill:#e03a3a;stroke:#1a1d23;stroke-width:1.4}
+.outfit-btn.like:active{background:rgba(224,92,92,.08)}
+.outfit-btn.discard{font-size:20px;color:var(--muted);font-weight:300}
+.outfit-btn.discard:active{background:rgba(100,100,120,.06)}
+.outfit-btn+.outfit-btn{border-left:1px solid var(--border)}
+
+/* ARMARIO */
+.prendas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.tarjeta-prenda{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  animation:slideUp .35s ease both;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.prenda-foto{width:100%;aspect-ratio:3/4;display:flex;align-items:center;
+  justify-content:center;font-size:48px;background:var(--bg)}
+.prenda-info{padding:10px 12px}
+.prenda-tipo{font-size:13px;font-weight:500;color:var(--text)}
+.prenda-color{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* FAB */
+.fab{position:fixed;bottom:calc(var(--nav-h) + var(--safe-bot) + 16px);right:20px;
+  width:52px;height:52px;background:var(--accent);color:white;border:none;
+  border-radius:50%;font-size:26px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(91,127,241,.4);
+  display:none;align-items:center;justify-content:center;
+  transition:transform .15s,box-shadow .15s;z-index:200}
+.fab.visible{display:flex}
+.fab:active{transform:scale(.92);box-shadow:0 2px 8px rgba(91,127,241,.3)}
+
+/* FAVORITOS */
+.favoritos-empty{grid-column:span 2;text-align:center;padding:48px 20px;
+  color:var(--muted);font-size:13px;line-height:1.7}
+.favoritos-empty .empty-icon{font-size:40px;margin-bottom:12px}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav-h) + var(--safe-bot));padding-bottom:var(--safe-bot);
+  background:var(--surface);border-top:1px solid var(--border);
+  display:none;align-items:center;justify-content:space-around;
+  z-index:300;box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+.bottom-nav.visible{display:flex}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 0 6px;cursor:pointer;border:none;background:none;
+  -webkit-user-select:none;transition:transform .1s}
+.nav-tab:active{transform:scale(.9)}
+.nav-icon{line-height:1;transition:transform .2s;color:var(--muted)}
+.nav-icon svg{transition:stroke .2s;stroke:var(--muted)}
+.nav-tab.active .nav-icon{transform:translateY(-2px);color:var(--accent)}
+.nav-tab.active .nav-icon svg{stroke:var(--accent)}
+.nav-label{font-size:10px;letter-spacing:.06em;font-weight:500;color:var(--muted);transition:color .2s}
+.nav-tab.active .nav-label{color:var(--accent)}
+
+/* MODALES */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1000;
+  align-items:flex-end;justify-content:center;padding-bottom:var(--safe-bot)}
+.modal-overlay.active{display:flex}
+.modal-sheet{background:var(--surface);border:1px solid var(--border);
+  box-shadow:0 -8px 40px rgba(0,0,0,.1);
+  border-radius:var(--modal-r) var(--modal-r) 0 0;
+  width:100%;max-width:480px;padding:20px 24px 32px;
+  animation:slideSheet .3s cubic-bezier(.22,1,.36,1);max-height:90dvh;overflow-y:auto}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
+.sheet-title{font-size:22px;font-weight:400;color:var(--text);margin-bottom:20px}
+.zona-drop{border:1px dashed var(--border);border-radius:var(--radius);padding:28px 20px;
+  text-align:center;cursor:pointer;background:var(--bg);
+  transition:border-color .2s,background .2s;margin-bottom:20px}
+.zona-drop:active{border-color:var(--accent);background:rgba(91,127,241,.05)}
+.drop-icon{font-size:32px;margin-bottom:8px}
+.drop-text{font-size:13px;color:var(--muted)}
+#img-preview{width:100%;max-height:200px;object-fit:contain;display:none;border-radius:10px;margin-bottom:8px}
+.field-group{margin-bottom:14px}
+.field-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;display:block}
+.field-select{width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:10px;padding:13px 14px;color:var(--text);font-family:var(--font-body);
+  font-size:14px;outline:none;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a90a0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  transition:border-color .2s,box-shadow .2s}
+.field-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,127,241,.12)}
+.field-select:disabled{opacity:.4;cursor:not-allowed}
+.field-select option{background:var(--surface)}
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fields-grid .field-group:last-child{grid-column:span 2}
+#status-modal{font-size:12px;color:var(--accent);text-align:center;margin:10px 0;min-height:16px}
+#modal-mensaje{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:3000;
+  align-items:center;justify-content:center;padding:24px}
+#modal-mensaje.active{display:flex}
+.mensaje-caja{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--modal-r);padding:28px 24px;width:100%;max-width:340px;
+  text-align:center;animation:fadeScale .25s ease;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.mensaje-icon{font-size:36px;margin-bottom:12px}
+.mensaje-texto{font-size:15px;color:var(--text);line-height:1.5;margin-bottom:22px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;display:inline-block;
+  vertical-align:middle;margin-right:8px}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeScale{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideSheet{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-spacer"></div>
+    <div class="topbar-logo">StyleMate</div>
+    <div class="topbar-icon" onclick="togglePerfilMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </div>
+    <div class="perfil-menu" id="perfil-menu">
+      <div class="perfil-nombre" id="perfil-nombre"></div>
+      <button class="perfil-btn" onclick="cerrarSesion()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 17l5-5-5-5M21 12H9"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </div>
+
+  <!-- INICIO -->
+  <div id="page-inicio" class="page active">
+    <div class="section-label" style="margin-top:4px;text-align:center">¿Qué tiempo hace hoy?</div>
+    <div class="clima-wrap">
+      <div class="clima-opciones">
+        <button class="clima-btn" data-clima="soleado" onclick="seleccionarClima(this)"><div class="clima-icon-wrap"><span class="clima-icon">☀️</span></div><span class="clima-texto">Soleado</span></button>
+        <button class="clima-btn" data-clima="nublado" onclick="seleccionarClima(this)"><div class="clima-icon-wrap"><span class="clima-icon">⛅</span></div><span class="clima-texto">Nublado</span></button>
+        <button class="clima-btn" data-clima="lluvioso" onclick="seleccionarClima(this)"><div class="clima-icon-wrap"><span class="clima-icon">🌧️</span></div><span class="clima-texto">Lluvia</span></button>
+        <button class="clima-btn" data-clima="frio" onclick="seleccionarClima(this)"><div class="clima-icon-wrap"><span class="clima-icon">❄️</span></div><span class="clima-texto">Frío</span></button>
+        <button class="clima-btn" data-clima="caluroso" onclick="seleccionarClima(this)"><div class="clima-icon-wrap"><span class="clima-icon">🌡️</span></div><span class="clima-texto">Calor</span></button>
+      </div>
+    </div>
+    <div class="section-label" style="text-align:center">Outfits sugeridos</div>
+    <div class="outfits-grid" id="outfits-grid"></div>
+  </div>
+
+  <!-- ARMARIO -->
+  <div id="page-armario" class="page">
+    <div class="section-label" style="margin-top:4px">Tu armario</div>
+    <div class="prendas-grid" id="prendas-grid"></div>
+  </div>
+
+  <!-- FAVORITOS -->
+  <div id="page-favoritos" class="page">
+    <div class="section-label" style="margin-top:4px">Outfits favoritos</div>
+    <div class="outfits-grid" id="favoritos-grid"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab-anadir" onclick="abrirModal()">＋</button>
+
+<nav class="bottom-nav visible" id="bottom-nav">
+  <button class="nav-tab active" id="tab-inicio" onclick="irA('inicio')">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M3 12L12 3l9 9"/><path d="M5 10.5V20a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9.5"/>
+      </svg>
+    </span>
+    <span class="nav-label">Inicio</span>
+  </button>
+  <button class="nav-tab" id="tab-armario" onclick="irA('armario')">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M12 4a2 2 0 00-2 2c0 .74.4 1.38 1 1.73V9L3 14h18L13 9V7.73c.6-.35 1-.99 1-1.73a2 2 0 00-2-2z"/>
+        <path d="M3 14v5a1 1 0 001 1h16a1 1 0 001-1v-5"/>
+      </svg>
+    </span>
+    <span class="nav-label">Armario</span>
+  </button>
+  <button class="nav-tab" id="tab-favoritos" onclick="irA('favoritos')">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M12 21C12 21 3 14.5 3 8.5A5 5 0 0112 6a5 5 0 019 2.5C21 14.5 12 21 12 21z"/>
+      </svg>
+    </span>
+    <span class="nav-label">Favoritos</span>
+  </button>
+</nav>
+
+<!-- Modal añadir prenda -->
+<div id="modal-carga" class="modal-overlay" onclick="cerrarModalSiOverlay(event)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nueva prenda</div>
+    <div class="zona-drop" onclick="document.getElementById('file-input').click()">
+      <img id="img-preview" alt="Vista previa">
+      <div class="drop-icon" id="drop-icon">👗</div>
+      <div class="drop-text" id="texto-drop">Toca para elegir una foto</div>
+      <input type="file" id="file-input" hidden accept="image/*" capture="environment">
+    </div>
+    <div class="fields-grid">
+      <div class="field-group">
+        <label class="field-label">Tipo de prenda</label>
+        <select id="combo-tipo" class="field-select" disabled>
+          <option value="" disabled selected>— Analizando…</option>
+          <option>Camiseta</option><option>Sudadera</option><option>Pantalón</option>
+          <option>Chaqueta</option><option>Vaquero</option><option>Falda</option><option>Calzado</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Color principal</label>
+        <select id="combo-color" class="field-select" disabled>
+          <option value="" disabled selected>— Analizando…</option>
+          <option>Blanco</option><option>Negro</option><option>Azul</option>
+          <option>Gris</option><option>Rojo</option><option>Beige/Amarillo</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Estilo</label>
+        <select id="combo-estilo" class="field-select" disabled>
+          <option value="" disabled selected>— Analizando…</option>
+          <option>Casual</option><option>Formal</option><option>Deportivo</option>
+        </select>
+      </div>
+    </div>
+    <p id="status-modal"></p>
+    <button class="btn btn-full" id="btn-guardar" onclick="enviarGuardadoFinal()">Guardar en el armario</button>
+    <button class="btn btn-dark" style="margin-top:10px" onclick="cerrarModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal mensajes -->
+<div id="modal-mensaje" onclick="cerrarMensaje()">
+  <div class="mensaje-caja" onclick="event.stopPropagation()">
+    <div class="mensaje-icon" id="msg-icon">✅</div>
+    <div class="mensaje-texto" id="msg-texto"></div>
+    <button class="btn btn-full" onclick="cerrarMensaje()">Aceptar</button>
+  </div>
+</div>
+
+<script>
+const API_URL = "http://192.168.0.101:8000";
+let nombreArchivoTemp = "";
+let SESION = { id: 1, nombre: "demo" };
+let climaActual = null;
+let favoritos = [];
+
+const ARMARIO = [
+  { tipo:"Camiseta", color:"Blanco",     emoji:"👕", capa:1, climas:["soleado","caluroso","nublado"] },
+  { tipo:"Camiseta", color:"Azul",       emoji:"👕", capa:1, climas:["soleado","caluroso"] },
+  { tipo:"Sudadera", color:"Gris",       emoji:"🧥", capa:1, climas:["nublado","frio","lluvioso"] },
+  { tipo:"Chaqueta", color:"Negro",      emoji:"🧥", capa:1, climas:["frio","lluvioso","nublado"] },
+  { tipo:"Pantalón", color:"Beige",      emoji:"👖", capa:2, climas:["soleado","caluroso","nublado"] },
+  { tipo:"Vaquero",  color:"Azul",       emoji:"👖", capa:2, climas:["soleado","nublado","frio"] },
+  { tipo:"Calzado",  color:"Blanco",     emoji:"👟", capa:3, climas:["soleado","caluroso","nublado"] },
+  { tipo:"Calzado",  color:"Negro",      emoji:"👞", capa:3, climas:["frio","lluvioso","nublado"] },
+];
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Verificar sesión activa
+  const sesionGuardada = sessionStorage.getItem('sesion');
+  if (!sesionGuardada) {
+    window.location.replace('index.html');
+    return;
+  }
+  SESION = JSON.parse(sesionGuardada);
+  document.getElementById('perfil-nombre').textContent = SESION.nombre;
+
+  // Recuperar favoritos persistidos de este usuario
+  const favGuardados = localStorage.getItem('favoritos_' + SESION.id);
+  if (favGuardados) {
+    try { favoritos = JSON.parse(favGuardados); } catch { favoritos = []; }
+  }
+
+  renderOutfits();
+  renderArmario();
+  renderFavoritos();
+});
+
+/* ── Perfil ─────────────────────────────────────────────── */
+function togglePerfilMenu() {
+  document.getElementById('perfil-menu').classList.toggle('visible');
+}
+// Cerrar el menú al pulsar fuera
+document.addEventListener('click', e => {
+  const menu  = document.getElementById('perfil-menu');
+  const icon  = document.querySelector('.topbar-icon');
+  if (!menu.contains(e.target) && !icon.contains(e.target)) {
+    menu.classList.remove('visible');
+  }
+});
+function cerrarSesion() {
+  sessionStorage.removeItem('sesion');
+  window.location.replace('index.html');
+}
+
+/* ── Navegación ─────────────────────────────────────────── */
+function irA(pagina) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + pagina).classList.add('active');
+  document.getElementById('tab-' + pagina).classList.add('active');
+  document.getElementById('fab-anadir').classList.toggle('visible', pagina === 'armario');
+}
+
+/* ── Clima ──────────────────────────────────────────────── */
+function seleccionarClima(btn) {
+  const yaActivo = btn.classList.contains('activo');
+  document.querySelectorAll('.clima-btn').forEach(b => b.classList.remove('activo'));
+  if (yaActivo) {
+    climaActual = null;
+  } else {
+    btn.classList.add('activo');
+    climaActual = btn.dataset.clima;
+  }
+  renderOutfits();
+}
+
+/* ── Outfits ────────────────────────────────────────────── */
+function getPool() {
+  const pool = climaActual ? ARMARIO.filter(p => p.climas.includes(climaActual)) : ARMARIO;
+  return (pool.some(p => p.capa===1) && pool.some(p => p.capa===2)) ? pool : ARMARIO;
+}
+
+// Genera todas las combinaciones únicas posibles del pool
+function todasLasCombinaciones(pool) {
+  const tops    = pool.filter(p => p.capa===1);
+  const bottoms = pool.filter(p => p.capa===2);
+  const shoes   = pool.filter(p => p.capa===3);
+  const combos  = [];
+  const vistos  = new Set();
+
+  const añadir = (prendas) => {
+    const id = prendas.map(p => p.tipo + p.color).join('+');
+    if (!vistos.has(id)) { vistos.add(id); combos.push(prendas); }
+  };
+
+  if (shoes.length) {
+    for (const t of tops)
+      for (const b of bottoms)
+        for (const s of shoes) añadir([t, b, s]);
+  } else {
+    for (const t of tops)
+      for (const b of bottoms) añadir([t, b]);
+  }
+  return combos;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function crearPlaceholder() {
+  const div = document.createElement('div');
+  div.className = 'outfit-placeholder';
+  div.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2">
+      <path d="M3 6l3-3h4l2 3 2-3h4l3 3-3 2v11H6V8L3 6z"/>
+    </svg>
+    <span>Sin prendas</span>`;
+  return div;
+}
+
+function crearTarjeta(prendas) {
+  const id     = prendas.map(p => p.tipo + p.color).join('+');
+  const emojis = prendas.map(p => p.emoji).join(' ');
+  const esFav  = favoritos.some(f => f.id === id);
+  const card   = document.createElement('div');
+  card.className = 'outfit-card';
+  card.innerHTML = `
+    <div class="outfit-img">${prendas.map(p=>`<span style="font-size:38px;line-height:1">${p.emoji}</span>`).join('')}</div>
+    <div class="outfit-acciones">
+      <button class="outfit-btn like${esFav?' liked':''}" data-id="${id}" data-emojis="${emojis}" onclick="toggleFav(this)"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5 5 0 0112 6a5 5 0 019 2.5C21 14.5 12 21 12 21z"/></svg></button>
+      <button class="outfit-btn discard" onclick="descartar(this)">×</button>
+    </div>`;
+  return card;
+}
+
+function renderOutfits() {
+  const grid   = document.getElementById('outfits-grid');
+  grid.innerHTML = '';
+  const combos = shuffle(todasLasCombinaciones(getPool())).slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    if (i < combos.length) {
+      grid.appendChild(crearTarjeta(combos[i]));
+    } else {
+      const ph = crearPlaceholder();
+      ph.style.animationDelay = (i * .06) + 's';
+      grid.appendChild(ph);
+    }
+  }
+}
+
+function toggleFav(btn) {
+  const { id, emojis } = btn.dataset;
+  const idx   = favoritos.findIndex(f => f.id === id);
+  const ahora = idx >= 0;
+  if (ahora) {
+    favoritos.splice(idx, 1);
+  } else {
+    favoritos.push({ id, emojis });
+  }
+  // Sincronizar todos los botones con el mismo id
+  document.querySelectorAll(`.outfit-btn.like[data-id="${id}"]`).forEach(b => {
+    if (ahora) { b.classList.remove('liked'); }
+    else       { b.classList.add('liked'); }
+  });
+  // Persistir en localStorage
+  localStorage.setItem('favoritos_' + SESION.id, JSON.stringify(favoritos));
+  renderFavoritos();
+}
+
+let _pendingDescartar = null;
+
+function descartar(btn) {
+  const card    = btn.closest('.outfit-card');
+  const likeBtn = card.querySelector('.outfit-btn.like');
+  const esFav   = likeBtn && likeBtn.classList.contains('liked');
+
+  if (esFav) {
+    _pendingDescartar = card;
+    // Deshabilitar todos los botones de descartar para evitar race condition
+    document.querySelectorAll('.outfit-btn.discard').forEach(b => b.disabled = true);
+    document.getElementById('modal-confirm').style.display = 'flex';
+    return;
+  }
+  ejecutarDescartar(card);
+}
+
+function confirmarDescartar(aceptar) {
+  document.getElementById('modal-confirm').style.display = 'none';
+  document.querySelectorAll('.outfit-btn.discard').forEach(b => b.disabled = false);
+  if (aceptar && _pendingDescartar) ejecutarDescartar(_pendingDescartar);
+  _pendingDescartar = null;
+}
+
+function ejecutarDescartar(card) {
+  // Si era favorito, quitarlo de la lista y re-renderizar favoritos
+  const likeBtn = card.querySelector('.outfit-btn.like');
+  if (likeBtn && likeBtn.classList.contains('liked')) {
+    const id = likeBtn.dataset.id;
+    favoritos = favoritos.filter(f => f.id !== id);
+    localStorage.setItem('favoritos_' + SESION.id, JSON.stringify(favoritos));
+    renderFavoritos();
+  }
+  const grid = card.parentElement;
+  card.style.cssText += 'transition:opacity .18s,transform .18s;opacity:0;transform:scale(.9)';
+  setTimeout(() => {
+    const usados = Array.from(document.querySelectorAll('#outfits-grid .outfit-btn.like'))
+      .map(b => b.dataset.id);
+    const disponibles = shuffle(todasLasCombinaciones(getPool()))
+      .filter(c => !usados.includes(c.map(p => p.tipo + p.color).join('+')));
+    const nueva = disponibles.length
+      ? crearTarjeta(disponibles[0])
+      : crearPlaceholder();
+    nueva.style.cssText = 'opacity:0;transform:scale(.9);transition:opacity .22s,transform .22s';
+    grid.replaceChild(nueva, card);
+    requestAnimationFrame(() => { nueva.style.opacity='1'; nueva.style.transform='scale(1)'; });
+  }, 200);
+}
+
+/* ── Armario ────────────────────────────────────────────── */
+async function renderArmario() {
+  const grid = document.getElementById('prendas-grid');
+  grid.innerHTML = '<p style="color:var(--muted);font-size:13px;grid-column:span 2;text-align:center;padding:20px 0">Cargando armario…</p>';
+
+  try {
+    const res   = await fetch(`${API_URL}/ver-armario/${SESION.id}`);
+    const data  = await res.json();
+    const items = data.armario;
+
+    grid.innerHTML = '';
+    if (!items.length) {
+      grid.innerHTML = '<p style="color:var(--muted);font-size:13px;grid-column:span 2;text-align:center;padding:20px 0">Tu armario está vacío.<br>Añade tu primera prenda 👆</p>';
+      return;
+    }
+    items.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'tarjeta-prenda';
+      card.style.animationDelay = (i * .06) + 's';
+      const fotoHtml = p.nombre_archivo
+        ? `<img src="${API_URL}/imagenes/${SESION.nombre}/${p.nombre_archivo}" class="prenda-foto" style="object-fit:cover" onerror="this.outerHTML='<div class=\'prenda-foto\'>👗</div>'">`
+        : `<div class="prenda-foto">👗</div>`;
+      card.innerHTML = `${fotoHtml}
+        <div class="prenda-info">
+          <div class="prenda-tipo">${p.tipo}</div>
+          <div class="prenda-color">${p.color}</div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  } catch {
+    // Sin servidor: usar datos demo
+    grid.innerHTML = '';
+    ARMARIO.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'tarjeta-prenda';
+      card.style.animationDelay = (i * .06) + 's';
+      card.innerHTML = `<div class="prenda-foto">${p.emoji}</div>
+        <div class="prenda-info"><div class="prenda-tipo">${p.tipo}</div><div class="prenda-color">${p.color}</div></div>`;
+      grid.appendChild(card);
+    });
+  }
+}
+
+/* ── Favoritos ──────────────────────────────────────────── */
+function renderFavoritos() {
+  const grid = document.getElementById('favoritos-grid');
+  grid.innerHTML = '';
+  if (!favoritos.length) {
+    grid.innerHTML = `<div class="favoritos-empty"><div class="empty-icon">🤍</div>Aún no tienes outfits favoritos.<br>Pulsa ♡ en los outfits sugeridos.</div>`;
+    return;
+  }
+  favoritos.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'outfit-card';
+    card.innerHTML = `
+      <div class="outfit-img">${f.emojis.split(' ').map(e=>`<span style="font-size:38px;line-height:1">${e}</span>`).join('')}</div>
+      <div class="outfit-acciones">
+        <button class="outfit-btn like liked" data-id="${f.id}" data-emojis="${f.emojis}" onclick="toggleFav(this)"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 3 14.5 3 8.5A5 5 0 0112 6a5 5 0 019 2.5C21 14.5 12 21 12 21z"/></svg></button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ── Mensajes ───────────────────────────────────────────── */
+function mostrarMensaje(texto, icono="✅") {
+  document.getElementById("msg-icon").textContent  = icono;
+  document.getElementById("msg-texto").textContent = texto;
+  document.getElementById("modal-mensaje").classList.add("active");
+}
+function cerrarMensaje() { document.getElementById("modal-mensaje").classList.remove("active"); }
+function setStatus(t, c="var(--accent)") {
+  const el = document.getElementById("status-modal"); el.style.color=c; el.textContent=t;
+}
+
+/* ── Modal prenda ───────────────────────────────────────── */
+function abrirModal() { document.getElementById("modal-carga").classList.add("active"); }
+function cerrarModal() { document.getElementById("modal-carga").classList.remove("active"); resetearFormulario(); }
+function cerrarModalSiOverlay(e) { if (e.target===document.getElementById("modal-carga")) cerrarModal(); }
+function resetearFormulario() {
+  document.getElementById("img-preview").style.display="none";
+  document.getElementById("drop-icon").style.display="block";
+  document.getElementById("texto-drop").style.display="block";
+  document.getElementById("file-input").value="";
+  document.getElementById("status-modal").textContent="";
+  nombreArchivoTemp="";
+  document.querySelectorAll(".field-select").forEach(el=>{el.disabled=true;el.selectedIndex=0;});
+}
+document.getElementById("file-input").addEventListener("change",function(e){
+  const archivo=e.target.files[0]; if(!archivo) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=document.getElementById("img-preview");
+    img.src=ev.target.result; img.style.display="block";
+    document.getElementById("drop-icon").style.display="none";
+    document.getElementById("texto-drop").style.display="none";
+  };
+  reader.readAsDataURL(archivo); analizarConIA(archivo);
+});
+async function analizarConIA(archivo) {
+  setStatus("⏳ Analizando con IA…");
+  const form=new FormData(); form.append("file",archivo); form.append("username",SESION.nombre);
+  try {
+    const res=await fetch(`${API_URL}/analizar-prenda`,{method:"POST",body:form});
+    const data=await res.json();
+    document.querySelectorAll(".field-select").forEach(el=>{el.disabled=false;el.options[0].text="Selecciona…";});
+    document.getElementById("combo-tipo").value=data.tipo_ia;
+    document.getElementById("combo-color").value=data.color_ia;
+    nombreArchivoTemp=data.archivo_temp;
+    setStatus("Análisis completo. Ajusta si es necesario.","var(--success)");
+  } catch { setStatus("Error al analizar la imagen","var(--danger)"); }
+}
+async function enviarGuardadoFinal() {
+  const tipo=document.getElementById("combo-tipo").value;
+  const color=document.getElementById("combo-color").value;
+  const estilo=document.getElementById("combo-estilo").value;
+  if (!nombreArchivoTemp) { mostrarMensaje("Primero sube una imagen","⚠️"); return; }
+  const btn=document.getElementById("btn-guardar");
+  btn.innerHTML=`<span class="spinner"></span> Guardando…`; btn.disabled=true;
+  try {
+    const res=await fetch(`${API_URL}/confirmar-guardado`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({archivo:nombreArchivoTemp,tipo,color,estilo,user_id:SESION.id,username:SESION.nombre})
+    });
+    if (res.ok) { cerrarModal(); mostrarMensaje("Prenda guardada en tu armario","✅"); }
+    else { mostrarMensaje("Error al guardar la prenda","❌"); }
+  } catch { mostrarMensaje("No se pudo conectar al servidor","🌐"); }
+  finally { btn.innerHTML="Guardar en el armario"; btn.disabled=false; }
+}
+</script>
+<!-- Modal confirmar eliminar favorito -->
+<div id="modal-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);z-index:4000;align-items:center;justify-content:center;padding:24px">
+  <div class="mensaje-caja">
+    <div class="mensaje-icon">🗑️</div>
+    <div class="mensaje-texto">¿Seguro que deseas eliminar un outfit marcado como favorito?</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-dark" style="flex:1;padding:13px" onclick="confirmarDescartar(false)">Cancelar</button>
+      <button class="btn btn-full" style="flex:1;padding:13px" onclick="confirmarDescartar(true)">Eliminar</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
